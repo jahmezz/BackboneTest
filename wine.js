@@ -83,6 +83,18 @@ window.wineView = Backbone.View.extend({
         var target = event.target;
         console.log(
             'changing ' +target.id + ' from: ' + target.defaultValue);
+    },
+
+    saveWine: function() {
+        this.model.set({
+            name: $('#name').val(),
+            grapes: $('#grapes').val(),
+            grapes: $('#grapes').val(),
+            grapes: $('#grapes').val(),
+            grapes: $('#grapes').val(),
+            grapes: $('#grapes').val(),
+            
+        })
     }
 });
 // router for linking
