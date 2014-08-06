@@ -52,7 +52,7 @@ window.WineListItemView = Backbone.View.extend({
 
     tagName: "li",
 
-    template: _.template($('#tpl-wine-list-item').html()),
+    template: _.template($('#wine-list-item').html()),
 
     // adds model data to template
     render: function (eventName) {
@@ -69,7 +69,7 @@ window.WineListItemView = Backbone.View.extend({
 // view for form
 window.wineView = Backbone.View.extend({
 
-    template: _.template($('#tpl-wine-details').html()),
+    template: _.template($('#wine-details').html()),
 
     // merges model data to the details form
     render: function (eventName) {
@@ -129,7 +129,7 @@ window.wineView = Backbone.View.extend({
 
 window.HeaderView = Backbone.View.extend({
     // mount header as the html
-    template: _.template($('#tpl-header').html()),
+    template: _.template($('#header').html()),
 
     initialize: function () {
         this.render();
@@ -172,10 +172,6 @@ var AppRouter = Backbone.Router.extend({
         if(app.wineView) app.wineView.close();
         this.wineView = new WineView({model: this.wine});
         $('#content').html(this.wineView.render().el);
-    }
-
-    function (argument) {
-        // body...
     }
 });
 
