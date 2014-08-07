@@ -17,7 +17,7 @@ window.Wine = Backbone.Model.extend({
 // define an endpoint url and model for the collection
 window.WineCollection = Backbone.Collection.extend({
     model: Wine,
-    url: "../api/wines"
+    url: "api/wines"
 });
 
 // Views
@@ -30,18 +30,18 @@ window.WineListView = Backbone.View.extend({
     initialize: function () {
         this.model.bind("reset", this.render, this);
         var self = this;
-        this.model.bind("add", function(wine) {
+        this.model.bind("add", function (wine) {
             $(self.el).append(
-                new WineListItemView({model: view}).render().el);
+                new WineListItemView({model:view}).render().el);
         });
     },
 
     // iterates through collection, instantiates 
     // item for each wine and adds to list
     render: function (eventName) {
-        _.each(this.model.models, function(wine) {
+        _.each(this.model.models, function (wine) {
             $(this.el).append(
-                new WineListItemView({model: wine}).render().el);
+                new WineListItemView({model:wine}).render().el);
         }, this);
         return this;
     }
@@ -53,6 +53,11 @@ window.WineListItemView = Backbone.View.extend({
     tagName: "li",
 
     template: _.template($('#wine-list-item').html()),
+
+    initialize:function () {
+        this.model.bind("change", this.render, this);
+        this.model.bind("destroy", this.close, this);
+    },
 
     // adds model data to template
     render: function (eventName) {
@@ -71,9 +76,13 @@ window.wineView = Backbone.View.extend({
 
     template: _.template($('#wine-details').html()),
 
+    initialize:function () {
+        this.model.bind("change", this.render, this);
+    },
+
     // merges model data to the details form
     render: function (eventName) {
-        $(this.el).html(this.template(this.model.JSON()));
+        $(this.el).html(this.template(this.model.toJSON()));
         return this;
     },
 
@@ -101,7 +110,12 @@ window.wineView = Backbone.View.extend({
         // if new model, create the model on the list
         // else save model to server
         if(this.model.isNew()) {
-            app.wineList.create(this.model);
+            var self = this;
+            app.wineList.create(this.model, {
+                success: function () {
+                    app.navigate('wines/' + self.model.id, false);
+                }
+            });
         } else {
             this.model.save();
         }
@@ -141,11 +155,13 @@ window.HeaderView = Backbone.View.extend({
         return this;
     },
 
+    events: {
+        "click .new": "newWine"
+    },
+
     // make way for a new wine
     newWine: function (event) {
-        if(app.wineView) app.wineView.close();
-        app.wineView = new WineView({model: new Wine()});
-        $('#content').html(app.wineView.render().el);
+        app.navigate("wines/new", true);
         return false;
     }
 })
@@ -155,24 +171,46 @@ var AppRouter = Backbone.Router.extend({
     // urls
     routes: {
         "": "list",
+        "wines/new": "newWine",
         "wines/:id": "wineDetails"
+    },
+
+    initialize: function () {
+        $('#header').html(new HeaderView().render().el);
     },
 
     //list out the wines
     list: function () {
         this.wineList = new WineCollection();
-        this.WineListView = new WineListView({model: this.wineList});
-        this.wineList.fetch();
-        $('#sidebar').html(this.WineListView.render().el);
+        var self = this;
+        this.wineList.fetch({
+            success: function () {
+                self.WineListView = new WineListView({model: self.wineList});
+                $('#sidebar').html(self.WineListView.render().el);
+                if(self.requestedId) self.wineDetails(self.requestedId);
+            }
+        });
     },
 
     // details for one wine
     wineDetails: function (id) {
-        this.wine = this.wineList.get(id);
+        if (this.wineList) {
+            this.wine = this.wineList.get(id);
+            if (this.wineView) this.wineView.close();
+            this.wineView = new WineView({model: this.wine});
+            $('#content').html(this.wineView.render().el);
+        } else {
+            this.requestedId = id;
+            this.list();
+        }
+    },
+
+    newWine: function () {
         if(app.wineView) app.wineView.close();
-        this.wineView = new WineView({model: this.wine});
-        $('#content').html(this.wineView.render().el);
+        app.wineView = new WineView({model: new Wine()});
+        $('#content').html(app.wineView.render().el);
     }
+
 });
 
 var app = new AppRouter();
