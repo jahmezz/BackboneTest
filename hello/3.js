@@ -21,7 +21,7 @@
 			_.bindAll(this, 'render', 'addItem', 'appendItem');
 
 			this.collection = new List();
-			this.collection.bind('add', this.appendItem); // call add event when appendItem is called
+			this.collection.bind('add', this.appendItem); // call appendItem when add is called
 
 			this.counter = 0;
 			this.render();
